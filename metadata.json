@@ -1,0 +1,6 @@
+{
+  "name": "LeanLLM — Intelligent LLM Optimization Layer",
+  "description": "Dynamic middleware optimization layer for LLMs featuring semantic caching, adaptive model routing, RAG context pruning, compression, and cost/quality dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

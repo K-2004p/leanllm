@@ -1,0 +1,14 @@
+{
+  "queries": [],
+  "cacheEntries": [],
+  "config": {
+    "cacheEnabled": true,
+    "cacheThreshold": 0.88,
+    "routingEnabled": true,
+    "routingComplexityThreshold": 0.45,
+    "pruningEnabled": true,
+    "pruningTopK": 2,
+    "compressionEnabled": true,
+    "compressionLevel": "standard"
+  }
+}

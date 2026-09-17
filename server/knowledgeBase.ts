@@ -1,0 +1,88 @@
+import { KnowledgeChunk } from './types.js';
+
+export const KNOWLEDGE_BASE: KnowledgeChunk[] = [
+  {
+    id: 'kb-01',
+    title: 'KV Cache Optimization & Memory Bottlenecks in Transformer Inference',
+    category: 'Memory Optimization',
+    text: `During autoregressive generation, Transformers repeatedly recompute keys and values for previous tokens unless cached. The Key-Value (KV) cache stores these tensors in GPU high-bandwidth memory (HBM). For an LLaMA-70B model with context length 4096 and fp16 precision, the KV cache alone consumes ~1.3 GB per concurrent sequence. This causes memory fragmentation and severely restricts batch size. PagedAttention addresses this by allocating KV cache memory in non-contiguous virtual blocks similar to OS virtual memory paging, cutting waste from ~60-80% down to under 4%.`,
+    tokenEstimate: 104,
+  },
+  {
+    id: 'kb-02',
+    title: 'PagedAttention and vLLM Memory Management',
+    category: 'Inference Engines',
+    text: `PagedAttention is the foundational memory management algorithm utilized by vLLM. Traditional systems pre-allocate continuous memory chunks for the maximum sequence length, resulting in severe internal fragmentation (unused reserved slots) and external fragmentation. PagedAttention organizes the physical GPU memory into small fixed-size blocks (typically 16 or 32 tokens). Block tables map logical token sequences to physical memory blocks. This dynamic allocation allows sequences to share memory blocks during parallel sampling, beam search, and prompt sharing, boosting overall system throughput by 2x to 4x.`,
+    tokenEstimate: 110,
+  },
+  {
+    id: 'kb-03',
+    title: 'FlashAttention and GPU IO-Aware Attention Kernels',
+    category: 'Hardware Acceleration',
+    text: `Standard multi-head attention computes the attention matrix S = Q * K^T, writes it to GPU High Bandwidth Memory (HBM), applies softmax, and multiplies by V. The intermediate N x N attention matrix creates quadratic memory complexity O(N^2) and saturates memory bus bandwidth. FlashAttention reorganizes the attention computation into tiles that fit entirely inside high-speed GPU SRAM (108 KB to 228 KB per Streaming Multiprocessor). By utilizing online softmax accumulation and kernel fusion, FlashAttention avoids reading and writing the N x N attention matrix to slow HBM, yielding 2x-4x wall-clock speedups while computing exact mathematically identical attention with O(N) memory overhead.`,
+    tokenEstimate: 132,
+  },
+  {
+    id: 'kb-04',
+    title: 'FlashAttention-2: Parallelism and Partitioning Enhancements',
+    category: 'Hardware Acceleration',
+    text: `FlashAttention-2 improves upon the original FlashAttention kernel by parallelizing over the sequence length dimension in addition to batch size and attention heads. It reduces non-matmul FLOPs by rewriting the online softmax scaling equation, minimizes warp synchronization overhead, and prioritizes Tensor Core matrix multiplications (MMA instructions). This boosts throughput to reach 50-73% of theoretical peak GPU FLOPs on NVIDIA A100 and H100 architectures.`,
+    tokenEstimate: 92,
+  },
+  {
+    id: 'kb-05',
+    title: 'Post-Training Quantization: AWQ and GPTQ Comparison',
+    category: 'Quantization',
+    text: `Quantization compresses LLM weights from 16-bit floating point (FP16/BF16) down to 4-bit integers (INT4), reducing memory footprint by ~75%. GPTQ (Generalized Post-Training Quantization) uses second-order Taylor expansion (inverse Hessian matrix) to iteratively quantize weights layer by layer, compensating for quantization errors. In contrast, AWQ (Activation-aware Weight Quantization) observes that not all weights are equally important: protecting the top 1% salient weights based on activation magnitudes prevents severe perplexity degradation without requiring backprop or complex Hessian inversions. AWQ retains near-FP16 accuracy across reasoning benchmarks while allowing 70B models to fit on single 24GB GPUs.`,
+    tokenEstimate: 134,
+  },
+  {
+    id: 'kb-06',
+    title: 'Speculative Decoding: Drafter and Verifier Dynamics',
+    category: 'Inference Acceleration',
+    text: `Speculative decoding accelerates autoregressive LLM inference without quality loss by pairing a small, fast draft model with a large target model. The draft model speculatively generates K candidate tokens in rapid succession. The target model evaluates all K tokens in a single parallel forward pass using modified causal masks. Tokens matching the target model's probability distribution are accepted; if a token is rejected, a corrected token is sampled and generation proceeds from that point. Because memory bandwidth is the primary bottleneck in small-batch autoregressive generation, speculative decoding delivers 2x to 3x speedups while generating outputs identical to greedy target model inference.`,
+    tokenEstimate: 136,
+  },
+  {
+    id: 'kb-07',
+    title: 'Semantic Caching Architecture and Vector Proximity Search',
+    category: 'Caching',
+    text: `Semantic caching stores previous prompts and their generated responses in a vector database rather than relying on exact string matching. When a new query arrives, it is converted into a dense vector embedding and compared against cached queries using cosine distance or dot product metrics. If the similarity exceeds a defined threshold (typically 0.88-0.93), the cached response is returned immediately. This short-circuits the entire LLM pipeline, delivering sub-20ms latencies and 100% cost reduction for recurring semantic intents. Guardrails must enforce TTLs and prompt context freshness.`,
+    tokenEstimate: 114,
+  },
+  {
+    id: 'kb-08',
+    title: 'Adaptive Model Routing and Query Complexity Classification',
+    category: 'Routing & Orchestration',
+    text: `Different LLM requests require drastically different cognitive capabilities. Simple factual lookups, sentiment classification, and basic summaries can be solved reliably by lightweight, inexpensive models (e.g. Gemini 3.8 Flash Lite or GPT-4o-mini), costing less than $0.10 per million tokens. Complex architectural reasoning, multi-turn coding, and formal proofs require frontier models costing 10x to 30x more. Adaptive routing analyzes query length, reasoning syntax, step-by-step markers, and code patterns to dynamically select the cheapest model capable of reaching acceptable quality thresholds, slashing blended enterprise LLM expenditures by 60% to 80%.`,
+    tokenEstimate: 125,
+  },
+  {
+    id: 'kb-09',
+    title: 'RAG Context Pruning and Cross-Encoder Reranking',
+    category: 'RAG Optimization',
+    text: `Standard Retrieval-Augmented Generation (RAG) pipelines over-retrieve documents (e.g. 10 to 20 candidate chunks) to maximize recall. Feeding all candidate chunks directly into the prompt inflates input token costs, introduces noise, and triggers the "Lost in the Middle" attention degradation phenomenon where models overlook facts buried in long contexts. Cross-encoder rerankers jointly evaluate the query and document chunk, scoring deep contextual alignment. Pruning removes chunks below the confidence threshold, retaining only the top-k highest-signal chunks (typically 2-3), eliminating 70% of extraneous input tokens.`,
+    tokenEstimate: 128,
+  },
+  {
+    id: 'kb-10',
+    title: 'Context Compression: Deduplication and Sentence-Level Filtering',
+    category: 'Prompt Engineering',
+    text: `Even after pruning candidate chunks to top-k documents, retrieved context frequently contains boilerplate introductions, legal disclaimers, repeated sentences, and low-salience rhetorical transitions. Context compression algorithms parse chunks into constituent sentences, calculate semantic alignment with the user's explicit question, and filter out low-information filler. Deduplication removes overlapping propositions across multiple sources. This yields dense, high-signal prompt context that preserves factual coverage while reducing token consumption by an additional 30% to 50%.`,
+    tokenEstimate: 112,
+  },
+  {
+    id: 'kb-11',
+    title: 'Rotary Position Embeddings (RoPE) and Long-Context Scaling',
+    category: 'Model Architecture',
+    text: `Rotary Position Embeddings (RoPE) encode positional information by multiplying the query and key representations with an orthogonal rotation matrix in 2D vector subspaces. RoPE naturally decays attention weights with relative token distance. To extend context windows from 4K to 32K or 128K tokens without retraining from scratch, techniques like Positional Interpolation (PI), YaRN (Yet another RoPE extensioN method), and dynamic NTK-aware scaling adjust the base rotation frequency, preserving high-frequency local attention while expanding receptive fields.`,
+    tokenEstimate: 110,
+  },
+  {
+    id: 'kb-12',
+    title: 'Continuous Batching and In-Flight Iteration Scheduling',
+    category: 'Inference Engines',
+    text: `Static batching in LLM serving waits for all requests in a batch to finish generating before returning responses or admitting new requests. Because generation lengths vary widely, shorter requests waste GPU compute waiting for the longest request to complete (the straggler problem). Continuous batching (or in-flight batching, introduced by Orca and used by TensorRT-LLM and vLLM) operates at the token-iteration level rather than the request level. As soon as a sequence generates an end-of-sequence (EOS) token, its slot is immediately freed and a new request begins processing in the very next step, boosting GPU utilization and request concurrency by 5x to 10x.`,
+    tokenEstimate: 135,
+  },
+];
